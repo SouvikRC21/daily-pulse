@@ -11,6 +11,7 @@ export default {
     if (request.method === "OPTIONS") return cors(new Response(null, { status: 204 }));
     try {
       if (!env.SYNC_TOKEN) return json({ error: "SYNC_TOKEN secret is not set on the server. See README." }, 500);
+      await ensureSchema(env);
       if (!authorized(request, url, env.SYNC_TOKEN)) return json({ error: "Wrong or missing token." }, 401);
       const route = `${request.method} ${url.pathname}`;
       switch (route) {
@@ -27,6 +28,17 @@ export default {
     }
   },
 };
+
+// Creates the tables on first use, so setup needs no database console step.
+let schemaReady = false;
+async function ensureSchema(env) {
+  if (schemaReady) return;
+  await env.DB.batch([
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS days (date TEXT PRIMARY KEY, data TEXT NOT NULL, updated INTEGER NOT NULL)"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)"),
+  ]);
+  schemaReady = true;
+}
 
 // ---- auth ----
 function authorized(request, url, token) {

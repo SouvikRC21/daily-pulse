@@ -27,28 +27,30 @@ Apple Watch ──► iPhone Health ──► Shortcut (9 pm automation)
 
 Apple only lets iPhone apps read Health data, so a web app can't read it directly. The Shortcuts app bridges that gap without a native app.
 
-## Deploy (about 10 minutes, free)
+## Deploy from your browser (about 10 minutes, free, nothing to install)
 
-You need [Node.js 20+](https://nodejs.org) and a free [Cloudflare account](https://dash.cloudflare.com/sign-up).
+1. **Create a Cloudflare account** at [dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up) and verify your email.
+2. **Create the database.** In the Cloudflare dashboard open **Storage & databases → D1 SQL database → Create**. Name it `daily-pulse` and create it. Copy the **Database ID** shown on its page.
+3. **Put the ID in your copy of the code.** On GitHub open `wrangler.toml` in your fork, click the pencil icon, and replace `REPLACE_WITH_YOUR_DATABASE_ID` with the ID. Set `TIMEZONE` to yours, then click **Commit changes**.
+4. **Deploy.** In Cloudflare open **Compute (Workers) → Workers & Pages → Create → Import a repository**. Connect GitHub, pick your `daily-pulse` repository, keep the project name `daily-pulse` and the default deploy command (`npx wrangler deploy`), and click **Deploy**. Wait for the build to finish.
+5. **Set your secret token.** Open the new worker → **Settings → Variables and Secrets → Add**. Choose type **Secret**, name `SYNC_TOKEN`, and paste a long random password (your iPhone's password generator works). Save and deploy.
+6. **Open your dashboard** at the address on the worker's page, for example `https://daily-pulse.<your-subdomain>.workers.dev`. Enter the token. On iPhone tap Share → **Add to Home Screen**.
+
+The tables are created automatically on first use. Every later change pushed to GitHub redeploys on its own.
+
+### Or deploy from a terminal
+
+You need [Node.js 20+](https://nodejs.org).
 
 ```bash
 git clone https://github.com/<you>/daily-pulse.git
 cd daily-pulse
 npm install
-npx wrangler login                      # opens the browser to sign in to Cloudflare
-npx wrangler d1 create daily-pulse      # copy the database_id it prints
-```
-
-1. Paste that `database_id` into `wrangler.toml`. Set `TIMEZONE` there too (default `Asia/Kolkata`).
-2. Create the tables and choose your secret token, a long random string you'll also put in the Shortcut:
-
-```bash
-npm run db:init
+npx wrangler login
+npx wrangler d1 create daily-pulse      # paste the printed database_id into wrangler.toml
 npx wrangler secret put SYNC_TOKEN
 npm run deploy
 ```
-
-Deploy prints your address, for example `https://daily-pulse.<your-subdomain>.workers.dev`. Open it, enter your token, and you'll see example data until your first sync. On iPhone, tap Share → **Add to Home Screen** so it opens like an app.
 
 ## The 9 pm Shortcut
 
