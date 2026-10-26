@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E7A63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Daily Pulse">
+<title>Daily Pulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column app shell on phones, two-column card grid on wide screens; tab bar for Today / Trends / Log / Sync */
+:root{
+  --bg:#F2F5F1; --surface:#FFFFFF; --sunk:#E8EDE8; --ink:#14201A; --muted:#5B6A62; --line:#D9E0DA;
+  --accent:#0E7A63; --accent-ink:#FFFFFF;
+  --move:#E5484D; --exercise:#3A9F22; --stand:#1597B5; --heart:#C23B6B;
+  --good:#2F8A46; --warn:#A86A12; --bad:#C2410C;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1412; --surface:#17201C; --sunk:#111916; --ink:#E6EEE9; --muted:#97A69E; --line:#29352F;
+  --accent:#3CC2A0; --accent-ink:#06231B;
+  --move:#FF5E63; --exercise:#7BD94C; --stand:#46C6E4; --heart:#F06C9B;
+  --good:#5BC277; --warn:#E3A43C; --bad:#F27A4A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1412; --surface:#17201C; --sunk:#111916; --ink:#E6EEE9; --muted:#97A69E; --line:#29352F;
+  --accent:#3CC2A0; --accent-ink:#06231B;
+  --move:#FF5E63; --exercise:#7BD94C; --stand:#46C6E4; --heart:#F06C9B;
+  --good:#5BC277; --warn:#E3A43C; --bad:#F27A4A; color-scheme:dark}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 96px}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1{font-size:30px;line-height:1}
+h2{font-size:22px}
+h3{font-size:17px}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.label{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:8px 14px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand small{color:var(--muted)}
+.datenav{display:flex;align-items:center;gap:6px}
+.datenav .d{min-width:150px;text-align:center;font-weight:600}
+button,.btn{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;min-height:40px}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.icon{width:40px;padding:0;font-size:18px}
+button.ghost{background:transparent;border-color:transparent;color:var(--accent);padding-inline:6px}
+button:disabled{opacity:.5;cursor:default}
+.banner{border:1px dashed var(--warn);color:var(--ink);background:color-mix(in srgb,var(--warn) 9%,var(--surface));border-radius:var(--radius);padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.span2{grid-column:1/-1}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-width:0}
+.card>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.rings{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.rings svg{flex:0 0 auto;width:150px;height:150px}
+.ringlist{display:grid;gap:8px;flex:1;min-width:170px}
+.ringrow{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:baseline}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.ringrow .num{font-size:22px;line-height:1}
+.ringrow small{color:var(--muted)}
+.ready{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.score{font-size:64px;line-height:.9;font-weight:700}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid currentColor}
+.pill.good{color:var(--good)}.pill.warn{color:var(--warn)}.pill.bad{color:var(--bad)}
+.parts{display:grid;gap:4px;font-size:13.5px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.tile{background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0}
+.tile .v{font-size:28px;line-height:1.05;font-weight:600}
+.tile .v small{font-size:14px;color:var(--muted);font-family:var(--body);font-weight:500;margin-left:3px}
+.tile .delta{font-size:12px;font-weight:600}
+.up{color:var(--good)}.down{color:var(--bad)}.flat{color:var(--muted)}
+.spark{display:block;width:100%;height:28px;margin-top:4px}
+.insights{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.insights li{display:grid;grid-template-columns:4px 1fr;gap:10px;font-size:14px}
+.insights li::before{content:"";border-radius:2px;background:var(--muted)}
+.insights li.good::before{background:var(--good)}.insights li.warn::before{background:var(--warn)}.insights li.bad::before{background:var(--bad)}
+.streaks{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.streak .num{font-size:34px;font-weight:700;line-height:1}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+.week div{text-align:center;font-size:11px;color:var(--muted)}
+.week i{display:block;height:26px;border-radius:6px;background:var(--sunk);margin-bottom:3px}
+.week i.on{background:var(--exercise)}
+.chartctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.chart{width:100%;margin-top:12px}
+.chart svg{display:block;width:100%}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--body)}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:8px}
+.stats .num{font-size:24px}
+.tablewrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--sunk)}
+form.edit{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+form.edit label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+form.edit .full{grid-column:1/-1}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+ol.steps{margin:0;padding-left:20px;display:grid;gap:8px}
+ol.steps li{padding-left:4px}
+code,.code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:13px;background:var(--sunk);border-radius:6px;padding:1px 5px}
+pre.code{padding:10px 12px;white-space:pre-wrap;word-break:break-all;margin:8px 0}
+textarea{width:100%;min-height:96px;font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:13px}
+.progress{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.note{font-size:13.5px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;gap:4px;padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));z-index:10}
+nav.tabs button{border:0;background:transparent;flex:1;max-width:160px;color:var(--muted);font-weight:600;font-size:13px;min-height:46px}
+nav.tabs button[aria-current="page"]{color:var(--accent)}
+nav.tabs button svg{display:block;margin:0 auto 2px;width:22px;height:22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Daily Pulse</h1><small id="who">Your Apple Watch, one page</small></div>
+    <div class="datenav" id="datenav">
+      <button class="icon" id="prevDay" aria-label="Previous day">‹</button>
+      <div class="d" id="dateLabel">Today</div>
+      <button class="icon" id="nextDay" aria-label="Next day">›</button>
+    </div>
+  </header>
+
+  <div class="banner" id="demoBanner" hidden>
+    <span><strong>Example data.</strong> These numbers are made up so you can see how it works. Sync from your iPhone or import your Health export to see your own.</span>
+    <button class="primary" data-goto="sync">Connect iPhone</button>
+  </div>
+  <div class="banner" id="offlineBanner" hidden>
+    <span id="offlineMsg">Can't reach your Daily Pulse server. Check your connection and reload.</span>
+  </div>
+  <div class="card" id="loginCard" hidden style="margin-bottom:14px">
+    <header><h2>Unlock your dashboard</h2></header>
+    <p class="note" style="margin-top:0">Enter the sync token you set when you deployed Daily Pulse. It's saved in this browser only.</p>
+    <form id="loginForm" class="actions" style="margin-top:0">
+      <input type="password" id="tokenInput" autocomplete="current-password" placeholder="Sync token" style="flex:1;min-width:200px" required>
+      <button class="primary" type="submit">Unlock</button>
+    </form>
+    <p class="note" id="loginErr" hidden></p>
+  </div>
+
+  <!-- TODAY -->
+  <section id="tab-today" class="grid">
+    <div class="card">
+      <header><h2>Activity rings</h2><span class="label" id="ringDate"></span></header>
+      <div class="rings">
+        <svg id="ringSvg" viewBox="0 0 150 150" role="img" aria-label="Move, exercise and stand rings"></svg>
+        <div class="ringlist" id="ringList"></div>
+      </div>
+    </div>
+    <div class="card">
+      <header><h2>Readiness</h2><span class="label">Estimate</span></header>
+      <div class="ready" id="ready"></div>
+      <p class="note" style="margin:10px 0 0">Compares last night's heart rate variability, resting heart rate and sleep with your own 30-day baseline, the way Oura and Whoop score recovery.</p>
+    </div>
+    <div class="card span2">
+      <header><h2>Today's numbers</h2><span class="note">Change shown against your 30-day average</span></header>
+      <div class="tiles" id="tiles"></div>
+    </div>
+    <div class="card">
+      <header><h2>Heart</h2><span class="label">Last 30 days</span></header>
+      <div class="tiles" id="heartTiles"></div>
+    </div>
+    <div class="card">
+      <header><h2>Insights</h2></header>
+      <ul class="insights" id="insights"></ul>
+    </div>
+    <div class="card span2">
+      <header><h2>Streaks and this week</h2><span class="note" id="weekNote"></span></header>
+      <div class="streaks" id="streaks"></div>
+      <div class="week" id="weekStrip"></div>
+    </div>
+  </section>
+
+  <!-- TRENDS -->
+  <section id="tab-trends" class="grid" hidden>
+    <div class="card span2">
+      <header><h2>Trends</h2>
+        <div class="chartctl">
+          <label class="label" for="metricSel" style="position:absolute;left:-9999px">Metric</label>
+          <select id="metricSel"></select>
+          <div class="seg" id="rangeSeg">
+            <button data-r="7">7D</button><button data-r="30" aria-pressed="true">30D</button><button data-r="90">90D</button><button data-r="365">1Y</button>
+          </div>
+        </div>
+      </header>
+      <div class="stats" id="chartStats"></div>
+      <div class="chart" id="chart"></div>
+    </div>
+    <div class="card span2">
+      <header><h2>Week over week</h2><span class="note">Last 7 days compared with the 7 before</span></header>
+      <div class="tiles" id="wow"></div>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section id="tab-log" class="grid" hidden>
+    <div class="card span2" id="editCard" hidden>
+      <header><h2 id="editTitle">Log a day</h2><button class="ghost" id="editClose">Close</button></header>
+      <form class="edit" id="editForm">
+        <label>Date<input type="date" id="f_date" required></label>
+        <label>Steps<input type="number" inputmode="numeric" id="f_steps" min="0"></label>
+        <label>Active kcal<input type="number" inputmode="decimal" id="f_activeKcal" min="0"></label>
+        <label>Exercise min<input type="number" inputmode="numeric" id="f_exerciseMin" min="0"></label>
+        <label>Stand hours<input type="number" inputmode="numeric" id="f_standHrs" min="0" max="24"></label>
+        <label>Distance km<input type="number" inputmode="decimal" step="0.01" id="f_distanceKm" min="0"></label>
+        <label>Resting HR bpm<input type="number" inputmode="numeric" id="f_restingHR" min="20" max="200"></label>
+        <label>Average HR bpm<input type="number" inputmode="numeric" id="f_avgHR" min="20" max="220"></label>
+        <label>HRV ms<input type="number" inputmode="numeric" id="f_hrv" min="0"></label>
+        <label>Sleep hours<input type="number" inputmode="decimal" step="0.1" id="f_sleepHrs" min="0" max="24"></label>
+        <label>Weight kg<input type="number" inputmode="decimal" step="0.1" id="f_weightKg" min="0"></label>
+        <label>Workout min<input type="number" inputmode="numeric" id="f_workoutMin" min="0"></label>
+        <label>Water (glasses)<input type="number" inputmode="numeric" id="f_water" min="0"></label>
+        <label>Energy (1 to 5)<select id="f_energy"><option value="">Not set</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        <label class="full">Workouts<input type="text" id="f_workouts" placeholder="Running, Strength"></label>
+        <label class="full">Note<input type="text" id="f_note" placeholder="How did today feel?"></label>
+      </form>
+      <div class="actions">
+        <button class="primary" id="editSave">Save day</button>
+        <button id="editDelete" hidden>Delete day</button>
+      </div>
+    </div>
+    <div class="card span2">
+      <header><h2>Daily log</h2><button class="primary" id="newDay">Log a day</button></header>
+      <p class="note" style="margin:0">Tap a row to edit it. Energy, water and notes are yours to add; the rest comes from your watch.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Date</th><th>Steps</th><th>Active kcal</th><th>Exercise</th><th>Resting HR</th><th>HRV</th><th>Sleep</th><th>Workouts</th><th>Energy</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table></div>
+      <div class="actions"><button id="moreRows" hidden>Show more days</button></div>
+    </div>
+  </section>
+
+  <!-- SYNC -->
+  <section id="tab-sync" class="grid" hidden>
+    <div class="card span2">
+      <header><h2>Automatic sync every evening</h2><span class="label" id="lastSync"></span></header>
+      <p class="note" style="margin-top:0">An iPhone Shortcut reads today's Apple Watch numbers from Health and sends them straight to this server at 9 pm. Nothing to paste. The full setup is in the README, and the two values it needs are here.</p>
+      <div class="tiles">
+        <div class="tile"><div class="label">Sync address</div><div class="code" id="syncUrl" style="word-break:break-all;margin-top:4px"></div><button class="ghost" id="copyUrl">Copy</button></div>
+        <div class="tile"><div class="label">Header</div><div class="code" style="margin-top:4px">Authorization: Bearer &lt;your token&gt;</div></div>
+      </div>
+      <ol class="steps" style="margin-top:12px">
+        <li>Build the <strong>Daily Pulse Sync</strong> shortcut from the README: Find Health Samples for each number, then <strong>Get Contents of URL</strong> (POST, JSON) to the address above.</li>
+        <li>Add <strong>Get Dictionary Value</strong> <em>report</em> and <strong>Show Notification</strong> so your iPhone and Apple Watch show the daily report.</li>
+        <li>In <strong>Automation</strong>, add Time of Day <em>9:00 PM, Daily</em>, choose <em>Run Immediately</em>, and pick the shortcut.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <header><h2>Paste instead</h2><span class="label">Backup</span></header>
+      <p class="note" style="margin-top:0">If a sync was missed, paste a line like the one below and tap Save.</p>
+      <label class="label" for="pasteBox">Text to save</label>
+      <textarea id="pasteBox" placeholder="date=2026-10-15 steps=8432 kcal=512 exmin=34 stand=11 rhr=58 hr=74 hrv=46 sleep=7.2 km=6.1"></textarea>
+      <div id="pastePreview" class="note"></div>
+      <div class="actions"><button class="primary" id="pasteSave" disabled>Save</button><button id="pasteClear">Clear</button></div>
+      <pre class="code" id="tmpl" hidden></pre>
+    </div>
+    <div class="card">
+      <header><h2>Import your history</h2><span class="label">One time</span></header>
+      <ol class="steps">
+        <li>In the <strong>Health</strong> app, tap your picture, then <strong>Export All Health Data</strong>.</li>
+        <li>Save the zip to <strong>Files</strong> and tap it to unzip.</li>
+        <li>Choose <code>export.xml</code> from the <em>apple_health_export</em> folder below.</li>
+      </ol>
+      <div class="actions">
+        <label class="btn" for="xmlFile" style="display:inline-flex;align-items:center">Choose export.xml</label>
+        <input type="file" id="xmlFile" accept=".xml,text/xml" hidden>
+        <select id="importRange" aria-label="How far back to import"><option value="90">Last 90 days</option><option value="365" selected>Last 12 months</option><option value="730">Last 2 years</option><option value="100000">Everything</option></select>
+      </div>
+      <div class="progress" id="importProg" hidden><i></i></div>
+      <p class="note" id="importMsg">The file is read on your device. Only the daily totals are saved.</p>
+      <div class="actions"><button class="primary" id="importSave" hidden>Save to my log</button></div>
+    </div>
+    <div class="card span2">
+      <header><h2>Goals</h2><span class="note">Apple's defaults, change them to suit you</span></header>
+      <form class="edit" id="goalForm">
+        <label>Move (active kcal)<input type="number" id="g_move" min="50"></label>
+        <label>Exercise (min)<input type="number" id="g_exercise" min="5"></label>
+        <label>Stand (hours)<input type="number" id="g_stand" min="1" max="24"></label>
+        <label>Steps<input type="number" id="g_steps" min="500"></label>
+        <label>Sleep (hours)<input type="number" step="0.5" id="g_sleep" min="4" max="12"></label>
+      </form>
+      <div class="actions"><button class="primary" id="goalSave">Save goals</button></div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <button data-tab="today" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg>Today</button>
+  <button data-tab="trends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l5-6 4 3 6-8 3 3"/></svg>Trends</button>
+  <button data-tab="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5h14M5 10h14M5 15h14M5 20h9"/></svg>Log</button>
+  <button data-tab="sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0114-5l2 2M20 12a8 8 0 01-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></svg>Sync</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseIso=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d,12)};
+const addDays=(s,n)=>{const d=parseIso(s);d.setDate(d.getDate()+n);return iso(d)};
+const todayIso=()=>iso(new Date());
+const fmt=(v,dp=0)=>v==null||isNaN(v)?"–":Number(v).toLocaleString(undefined,{maximumFractionDigits:dp,minimumFractionDigits:dp});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const METRICS={
+  steps:{name:"Steps",unit:"",dp:0,kind:"sum",color:"--accent",better:"up"},
+  activeKcal:{name:"Active energy",unit:"kcal",dp:0,kind:"sum",color:"--move",better:"up"},
+  exerciseMin:{name:"Exercise",unit:"min",dp:0,kind:"sum",color:"--exercise",better:"up"},
+  standHrs:{name:"Stand",unit:"h",dp:0,kind:"sum",color:"--stand",better:"up"},
+  distanceKm:{name:"Distance",unit:"km",dp:1,kind:"sum",color:"--accent",better:"up"},
+  flights:{name:"Flights climbed",unit:"",dp:0,kind:"sum",color:"--accent",better:"up"},
+  sleepHrs:{name:"Sleep",unit:"h",dp:1,kind:"avg",color:"--stand",better:"up"},
+  restingHR:{name:"Resting heart rate",unit:"bpm",dp:0,kind:"avg",color:"--heart",better:"down"},
+  avgHR:{name:"Average heart rate",unit:"bpm",dp:0,kind:"avg",color:"--heart",better:"none"},
+  maxHR:{name:"Max heart rate",unit:"bpm",dp:0,kind:"avg",color:"--heart",better:"none"},
+  hrv:{name:"Heart rate variability",unit:"ms",dp:0,kind:"avg",color:"--heart",better:"up"},
+  vo2max:{name:"Cardio fitness (VO₂ max)",unit:"",dp:1,kind:"avg",color:"--heart",better:"up"},
+  spo2:{name:"Blood oxygen",unit:"%",dp:0,kind:"avg",color:"--heart",better:"none"},
+  respRate:{name:"Respiratory rate",unit:"/min",dp:1,kind:"avg",color:"--heart",better:"none"},
+  weightKg:{name:"Weight",unit:"kg",dp:1,kind:"avg",color:"--accent",better:"none"},
+  workoutMin:{name:"Workout time",unit:"min",dp:0,kind:"sum",color:"--exercise",better:"up"},
+  water:{name:"Water",unit:"glasses",dp:0,kind:"sum",color:"--stand",better:"up"},
+  energy:{name:"Energy (self-rated)",unit:"/5",dp:1,kind:"avg",color:"--accent",better:"up"}
+};
+const DEFAULT_GOALS={move:500,exercise:30,stand:12,steps:10000,sleep:8};
+
+const state={token:"",goals:{...DEFAULT_GOALS},real:{},demo:null,sel:todayIso(),tab:"today",metric:"steps",range:30,logShown:30,canSave:false,dbReady:false};
+let pendingImport=null,pendingPaste=null;
+
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+
+/* ---------- example data (shown only while the log is empty) ---------- */
+function makeDemo(){
+  let seed=42;const r=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+  const out={};const end=todayIso();const types=["Running","Strength","Cycling","HIIT","Yoga"];
+  for(let i=120;i>=0;i--){
+    const d=addDays(end,-i);const dow=parseIso(d).getDay();const work=[1,3,5,6].includes(dow)&&r()>.15;
+    const tired=r()<.12;
+    const steps=Math.round((work?9500:6500)+r()*5000-(i===0?3500:0));
+    out[d]={steps,activeKcal:Math.round(steps*0.045+(work?260:60)+r()*80),exerciseMin:Math.round((work?38:8)+r()*20),standHrs:Math.round(9+r()*4),
+      distanceKm:+(steps*0.00074).toFixed(2),restingHR:Math.round(57+(tired?6:0)+r()*4-i*0.01),avgHR:Math.round(72+r()*8),maxHR:Math.round(work?150+r()*30:110+r()*15),
+      hrv:Math.round(46+(tired?-12:0)+r()*14+i*-0.02),sleepHrs:+(6.3+r()*1.8-(tired?0.8:0)).toFixed(1),vo2max:+(41.5+((120-i)/120)*1.6+r()*0.3).toFixed(1),
+      weightKg:+(76.8-((120-i)/120)*1.4+r()*0.4).toFixed(1),workoutMin:work?Math.round(32+r()*30):0,workouts:work?types[Math.floor(r()*types.length)]:"",
+      spo2:Math.round(96+r()*2),respRate:+(14+r()*1.5).toFixed(1),energy:Math.max(1,Math.min(5,Math.round(3+(tired?-1:0)+r()*1.4))),water:Math.round(5+r()*4)};
+  }
+  return out;
+}
+function data(){return Object.keys(state.real).length?state.real:(state.demo||(state.demo=makeDemo()))}
+function isDemo(){return !Object.keys(state.real).length}
+function get(d,k){const v=data()[d];return v&&v[k]!=null&&v[k]!==""?Number(v[k]):null}
+function series(k,end,n){const a=[];for(let i=n-1;i>=0;i--){const d=addDays(end,-i);a.push({d,v:get(d,k)})}return a}
+function mean(arr){const v=arr.filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
+function baseline(k,d,n=30){return mean(series(k,addDays(d,-1),n).map(x=>x.v))}
+
+/* ---------- rings ---------- */
+function renderRings(){
+  const d=state.sel,g=state.goals;
+  const rings=[
+    {k:"activeKcal",goal:g.move,name:"Move",unit:"kcal",c:"--move"},
+    {k:"exerciseMin",goal:g.exercise,name:"Exercise",unit:"min",c:"--exercise"},
+    {k:"standHrs",goal:g.stand,name:"Stand",unit:"h",c:"--stand"}];
+  const radii=[64,47,30],w=14;let svg="";
+  rings.forEach((rg,i)=>{
+    const r=radii[i],C=2*Math.PI*r,v=get(d,rg.k)||0,p=Math.min(v/rg.goal,1);
+    svg+=`<circle cx="75" cy="75" r="${r}" fill="none" stroke="var(${rg.c})" stroke-opacity=".18" stroke-width="${w}"/>`+
+      `<circle cx="75" cy="75" r="${r}" fill="none" stroke="var(${rg.c})" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${(C*p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 75 75)"/>`;
+  });
+  $("#ringSvg").innerHTML=svg;
+  const st=get(d,"steps");
+  $("#ringList").innerHTML=rings.map(rg=>{const v=get(d,rg.k);return `<div class="ringrow"><span class="dot" style="background:var(${rg.c})"></span><span><span class="label">${rg.name}</span><br><span class="num">${fmt(v)}</span> <small>/ ${fmt(rg.goal)} ${rg.unit}</small></span><span class="num" style="font-size:18px;color:var(${rg.c})">${v==null?"–":Math.round(v/rg.goal*100)+"%"}</span></div>`}).join("")+
+  `<div class="ringrow"><span class="dot" style="background:var(--accent)"></span><span><span class="label">Steps</span><br><span class="num">${fmt(st)}</span> <small>/ ${fmt(g.steps)}</small></span><span class="num" style="font-size:18px;color:var(--accent)">${st==null?"–":Math.round(st/g.steps*100)+"%"}</span></div>`;
+  $("#ringDate").textContent=prettyDate(d,true);
+}
+
+/* ---------- readiness ---------- */
+function readiness(d){
+  const parts=[];
+  const hrv=get(d,"hrv"),hb=baseline("hrv",d),rhr=get(d,"restingHR"),rb=baseline("restingHR",d),sl=get(d,"sleepHrs");
+  if(hrv!=null&&hb){const r=Math.max(.6,Math.min(1.4,hrv/hb));parts.push({w:.4,s:(r-.6)/.8,t:`HRV ${fmt(hrv)} ms vs ${fmt(hb)} usual`})}
+  if(rhr!=null&&rb){const r=Math.max(.85,Math.min(1.15,rb/rhr));parts.push({w:.3,s:(r-.85)/.3,t:`Resting HR ${fmt(rhr)} bpm vs ${fmt(rb)} usual`})}
+  if(sl!=null){parts.push({w:.3,s:Math.min(sl/state.goals.sleep,1),t:`Sleep ${fmt(sl,1)} h of ${state.goals.sleep} h goal`})}
+  if(!parts.length)return null;
+  const W=parts.reduce((a,p)=>a+p.w,0);
+  return {score:Math.round(100*parts.reduce((a,p)=>a+p.w*p.s,0)/W),parts};
+}
+function renderReady(){
+  const r=readiness(state.sel);
+  if(!r){$("#ready").innerHTML=`<p class="muted">Needs heart rate variability, resting heart rate or sleep for this day.</p>`;return}
+  const cls=r.score>=70?"good":r.score>=50?"warn":"bad",txt=r.score>=70?"Ready to push":r.score>=50?"Steady day":"Take it easy";
+  $("#ready").innerHTML=`<div class="score num" style="color:var(--${cls})">${r.score}</div><div style="display:grid;gap:6px"><span class="pill ${cls}">${txt}</span><div class="parts">${r.parts.map(p=>`<span>${esc(p.t)}</span>`).join("")}</div></div>`;
+}
+
+/* ---------- tiles ---------- */
+function spark(k,end,n=30){
+  const s=series(k,end,n),vals=s.map(x=>x.v).filter(v=>v!=null);if(vals.length<2)return "";
+  const mn=Math.min(...vals),mx=Math.max(...vals),rg=mx-mn||1;
+  const pts=s.map((x,i)=>x.v==null?null:[(i/(n-1))*100,26-((x.v-mn)/rg)*22]).filter(Boolean);
+  const last=pts[pts.length-1];
+  return `<svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="var(${METRICS[k].color})" stroke-width="1.6" vector-effect="non-scaling-stroke" points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" ")}"/><circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="var(${METRICS[k].color})"/></svg>`;
+}
+function tile(k,d,{withSpark=false,label}={}){
+  const m=METRICS[k],v=get(d,k),b=baseline(k,d);let delta="";
+  if(v!=null&&b){const diff=v-b,pct=diff/b*100;if(Math.abs(pct)>=1){const good=m.better==="none"?null:(m.better==="up")===(diff>0);
+    delta=`<span class="delta ${good==null?"flat":good?"up":"down"}">${diff>0?"▲":"▼"} ${fmt(Math.abs(m.kind==="sum"&&k==="steps"?pct:diff),k==="steps"?0:m.dp)}${k==="steps"?"%":" "+m.unit}</span>`}else delta=`<span class="delta flat">≈ usual</span>`}
+  return `<div class="tile"><div class="label">${esc(label||m.name)}</div><div class="v num">${fmt(v,m.dp)}${v!=null&&m.unit?`<small>${m.unit}</small>`:""}</div>${delta}${withSpark?spark(k,d):""}</div>`;
+}
+function renderTiles(){
+  const d=state.sel;
+  $("#tiles").innerHTML=["steps","activeKcal","exerciseMin","distanceKm","sleepHrs","workoutMin","weightKg","energy"].map(k=>tile(k,d)).join("");
+  $("#heartTiles").innerHTML=["restingHR","hrv","avgHR","vo2max"].map(k=>tile(k,d,{withSpark:true,label:{restingHR:"Resting HR",hrv:"HRV",avgHR:"Average HR",vo2max:"VO₂ max"}[k]})).join("");
+}
+
+/* ---------- insights ---------- */
+function renderInsights(){
+  const d=state.sel,out=[];
+  const rhr=get(d,"restingHR"),rb=baseline("restingHR",d);
+  if(rhr!=null&&rb&&rhr-rb>=3)out.push(["bad",`Resting heart rate is ${fmt(rhr-rb)} bpm above your usual. That often follows poor sleep, stress, alcohol or a cold, so an easier session may help.`]);
+  else if(rhr!=null&&rb&&rb-rhr>=2)out.push(["good",`Resting heart rate is ${fmt(rb-rhr)} bpm below your usual, a sign you're well recovered.`]);
+  const hrv=get(d,"hrv"),hb=baseline("hrv",d);
+  if(hrv!=null&&hb&&hrv<hb*0.8)out.push(["warn",`HRV is ${fmt((1-hrv/hb)*100)}% under your 30-day average. Prioritise sleep tonight.`]);
+  const sl=series("sleepHrs",d,7).map(x=>x.v).filter(v=>v!=null),short=sl.filter(v=>v<6).length;
+  if(short>=3)out.push(["warn",`You slept under 6 hours on ${short} of the last 7 nights.`]);
+  else if(sl.length>=5&&mean(sl)>=7)out.push(["good",`You've averaged ${fmt(mean(sl),1)} hours of sleep this week.`]);
+  const ex=series("exerciseMin",d,7).map(x=>x.v||0).reduce((a,b)=>a+b,0);
+  out.push([ex>=150?"good":"warn",ex>=150?`${fmt(ex)} exercise minutes in 7 days. You've met the WHO guideline of 150.`:`${fmt(ex)} of the WHO's recommended 150 weekly exercise minutes so far. ${fmt(150-ex)} to go.`]);
+  const v0=get(d,"vo2max"),v30=get(addDays(d,-30),"vo2max")??mean(series("vo2max",addDays(d,-30),14).map(x=>x.v));
+  if(v0!=null&&v30!=null&&Math.abs(v0-v30)>=0.5)out.push([v0>v30?"good":"warn",`Cardio fitness is ${v0>v30?"up":"down"} ${fmt(Math.abs(v0-v30),1)} over the past month.`]);
+  const w=series("weightKg",d,30).map(x=>x.v).filter(v=>v!=null);
+  if(w.length>=4){const ch=w[w.length-1]-w[0];if(Math.abs(ch)>=0.5)out.push(["neutral",`Weight is ${ch<0?"down":"up"} ${fmt(Math.abs(ch),1)} kg over 30 days.`])}
+  $("#insights").innerHTML=out.slice(0,5).map(([c,t])=>`<li class="${c}"><span>${esc(t)}</span></li>`).join("")||`<li><span class="muted">Insights appear once a few days of data are in.</span></li>`;
+}
+
+/* ---------- streaks ---------- */
+function streak(test,d){
+  let n=0,cur=d;if(!test(cur))cur=addDays(cur,-1);
+  while(test(cur)){n++;cur=addDays(cur,-1);if(n>2000)break}
+  return n;
+}
+function renderStreaks(){
+  const d=state.sel,g=state.goals;
+  const rows=[
+    ["Move goal days",streak(x=>(get(x,"activeKcal")||0)>=g.move,d)],
+    ["Exercise goal days",streak(x=>(get(x,"exerciseMin")||0)>=g.exercise,d)],
+    ["Step goal days",streak(x=>(get(x,"steps")||0)>=g.steps,d)],
+    ["Nights of 7 h+ sleep",streak(x=>(get(x,"sleepHrs")||0)>=7,d)]];
+  $("#streaks").innerHTML=rows.map(([l,n])=>`<div class="streak"><div class="num">${n}</div><div class="label">${l}</div></div>`).join("");
+  const start=addDays(d,-((parseIso(d).getDay()+6)%7));let html="",wk=0,wm=0;
+  for(let i=0;i<7;i++){const x=addDays(start,i),m=get(x,"workoutMin")||0,on=m>0||(get(x,"exerciseMin")||0)>=g.exercise;if(m>0){wk++;wm+=m}
+    html+=`<div><i class="${on?"on":""}" title="${x}"></i>${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i]}</div>`}
+  $("#weekStrip").innerHTML=html;
+  $("#weekNote").textContent=`${wk} workout${wk===1?"":"s"}, ${fmt(wm)} min this week. Green days hit your exercise goal.`;
+}
+
+/* ---------- trends chart ---------- */
+function renderChart(){
+  const k=state.metric,m=METRICS[k],n=state.range,end=state.sel;
+  let s=series(k,end,n);
+  if(n>90){const wk=[];for(let i=0;i<s.length;i+=7){const ch=s.slice(i,i+7);wk.push({d:ch[0].d,v:mean(ch.map(x=>x.v))})}s=wk}
+  const vals=s.map(x=>x.v).filter(v=>v!=null);
+  const box=$("#chart"),W=Math.max(300,box.clientWidth||600),H=240,L=44,R=10,T=12,B=26;
+  if(!vals.length){box.innerHTML=`<p class="muted">No ${m.name.toLowerCase()} recorded in this range.</p>`;$("#chartStats").innerHTML="";return}
+  const isBar=m.kind==="sum"&&n<=90;
+  let mn=isBar?0:Math.min(...vals),mx=Math.max(...vals);
+  if(!isBar){const pd=(mx-mn)*.15||1;mn-=pd;mx+=pd}else mx*=1.08;
+  const step=niceStep((mx-mn)/4);mn=Math.floor(mn/step)*step;mx=Math.ceil(mx/step)*step;
+  const x=i=>L+(s.length===1?0:(i/(s.length-1))*(W-L-R)),y=v=>T+(1-(v-mn)/(mx-mn))*(H-T-B);
+  const col=`var(${m.color})`;let g="";
+  for(let v=mn;v<=mx+1e-9;v+=step){g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(v,step<1?1:0)}</text>`}
+  const avg=mean(vals);
+  let marks="";
+  if(isBar){const bw=Math.max(2,(W-L-R)/s.length*.7);s.forEach((p,i)=>{if(p.v==null)return;const cx=L+(i+.5)*((W-L-R)/s.length);marks+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${y(p.v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(y(mn)-y(p.v)).toFixed(1)}" rx="2" fill="${col}" opacity="${i===s.length-1?1:.75}"><title>${p.d}: ${fmt(p.v,m.dp)} ${m.unit}</title></rect>`})}
+  else{const pts=s.map((p,i)=>p.v==null?null:[x(i),y(p.v),p]).filter(Boolean);
+    marks+=`<path d="M${pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" L")} L${pts[pts.length-1][0].toFixed(1)},${y(mn)} L${pts[0][0].toFixed(1)},${y(mn)} Z" fill="${col}" opacity=".12"/>`;
+    marks+=`<polyline fill="none" stroke="${col}" stroke-width="2" points="${pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")}"/>`;
+    const lp=pts[pts.length-1];marks+=`<circle cx="${lp[0]}" cy="${lp[1]}" r="4" fill="${col}"/>`;
+    if(n<=30)pts.forEach(p=>marks+=`<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="${col}" opacity="0"><title>${p[2].d}: ${fmt(p[2].v,m.dp)} ${m.unit}</title></circle>`)}
+  g+=`<line x1="${L}" x2="${W-R}" y1="${y(avg)}" y2="${y(avg)}" stroke="var(--ink)" stroke-dasharray="4 4" opacity=".5"/>`;
+  const lab=[0,Math.floor((s.length-1)/2),s.length-1];
+  lab.forEach((i,j)=>{const px=isBar?L+(i+.5)*((W-L-R)/s.length):x(i);g+=`<text x="${px}" y="${H-6}" text-anchor="${j===0?"start":j===2?"end":"middle"}">${shortDate(s[i].d)}</text>`});
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(m.name)} over ${n} days">${g}${marks}</svg>`;
+  const best=m.better==="down"?Math.min(...vals):Math.max(...vals);
+  $("#chartStats").innerHTML=`<div><div class="label">Average${n>90?" (weekly)":""}</div><span class="num">${fmt(avg,m.dp)}</span> <span class="muted">${m.unit}</span></div><div><div class="label">${m.better==="down"?"Lowest":"Highest"}</div><span class="num">${fmt(best,m.dp)}</span> <span class="muted">${m.unit}</span></div>${m.kind==="sum"&&n<=90?`<div><div class="label">Total</div><span class="num">${fmt(vals.reduce((a,b)=>a+b,0),m.dp)}</span> <span class="muted">${m.unit}</span></div>`:""}<div><div class="label">Days logged</div><span class="num">${series(k,end,n).filter(x=>x.v!=null).length}</span> <span class="muted">of ${n}</span></div>`;
+}
+function niceStep(raw){if(raw<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p}
+function renderWow(){
+  const d=state.sel;
+  $("#wow").innerHTML=["steps","activeKcal","exerciseMin","sleepHrs","restingHR","hrv","workoutMin","distanceKm"].map(k=>{
+    const m=METRICS[k],a=mean(series(k,d,7).map(x=>x.v)),b=mean(series(k,addDays(d,-7),7).map(x=>x.v));
+    let delta="";if(a!=null&&b){const diff=a-b,good=m.better==="none"?null:(m.better==="up")===(diff>0);delta=`<span class="delta ${Math.abs(diff/b)<.01?"flat":good==null?"flat":good?"up":"down"}">${diff>=0?"▲":"▼"} ${fmt(Math.abs(diff/b*100))}%</span>`}
+    return `<div class="tile"><div class="label">${m.name} · daily avg</div><div class="v num">${fmt(a,m.dp)}<small>${m.unit}</small></div>${delta}</div>`}).join("");
+}
+
+/* ---------- log ---------- */
+function renderLog(){
+  const days=Object.keys(data()).sort().reverse();
+  const rows=days.slice(0,state.logShown).map(d=>{const v=data()[d];
+    return `<tr data-d="${d}"><td>${shortDate(d,true)}</td><td>${fmt(v.steps)}</td><td>${fmt(v.activeKcal)}</td><td>${v.exerciseMin!=null?fmt(v.exerciseMin)+" min":"–"}</td><td>${fmt(v.restingHR)}</td><td>${fmt(v.hrv)}</td><td>${v.sleepHrs!=null?fmt(v.sleepHrs,1)+" h":"–"}</td><td>${esc(v.workouts||"")||(v.workoutMin?fmt(v.workoutMin)+" min":"–")}</td><td>${v.energy?esc(v.energy)+"/5":"–"}</td></tr>`}).join("");
+  $("#logBody").innerHTML=rows||`<tr><td colspan="9" class="muted">No days yet. Sync from your iPhone or tap Log a day.</td></tr>`;
+  $("#moreRows").hidden=days.length<=state.logShown;
+}
+const FIELDS=["steps","activeKcal","exerciseMin","standHrs","distanceKm","restingHR","avgHR","hrv","sleepHrs","weightKg","workoutMin","water","energy","workouts","note"];
+function openEdit(d){
+  const v=(isDemo()?{}:state.real[d])||{};
+  $("#editCard").hidden=false;$("#editTitle").textContent=state.real[d]?"Edit "+shortDate(d,true):"Log a day";
+  $("#f_date").value=d;FIELDS.forEach(k=>{$("#f_"+k).value=v[k]??""});
+  $("#editDelete").hidden=!state.real[d];
+  $("#editCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ---------- parsing the shortcut text ---------- */
+const ALIASES={date:"date",day:"date",steps:"steps",step:"steps",kcal:"activeKcal",active:"activeKcal",activekcal:"activeKcal",move:"activeKcal",calories:"activeKcal",exmin:"exerciseMin",exercise:"exerciseMin",stand:"standHrs",km:"distanceKm",distance:"distanceKm",mi:"distanceMi",flights:"flights",rhr:"restingHR",resting:"restingHR",hr:"avgHR",heart:"avgHR",maxhr:"maxHR",hrv:"hrv",sleep:"sleepHrs",vo2:"vo2max",vo2max:"vo2max",spo2:"spo2",oxygen:"spo2",resp:"respRate",weight:"weightKg",kg:"weightKg",lb:"weightLb",workout:"workoutMin",water:"water",energy:"energy",mood:"energy"};
+function toNum(s){
+  s=String(s).trim().replace(/[^\d.,-]/g,"");if(!s)return null;
+  if(s.includes(",")&&s.includes("."))s=s.replace(/,/g,"");
+  else if(/,\d{3}(?!\d)/.test(s))s=s.replace(/,/g,"");else s=s.replace(",",".");
+  const n=parseFloat(s);return isNaN(n)?null:n;
+}
+function parseSync(text){
+  const out={};let cur=null;
+  const toks=text.replace(/\r/g,"").split(/[\n;|]+/);
+  toks.forEach(line=>{
+    const pairs=line.match(/([A-Za-z0-9₂]+)\s*[=:]\s*([^\s=:][^=:]*?)(?=\s+[A-Za-z0-9₂]+\s*[=:]|$)/g)||[];
+    pairs.forEach(p=>{
+      const m=p.match(/^([A-Za-z0-9₂]+)\s*[=:]\s*(.*)$/);if(!m)return;
+      const key=ALIASES[m[1].toLowerCase()];if(!key)return;
+      if(key==="date"){const dm=m[2].match(/(\d{4})-(\d{1,2})-(\d{1,2})/);cur=dm?`${dm[1]}-${pad(dm[2])}-${pad(dm[3])}`:null;if(cur)out[cur]=out[cur]||{};return}
+      const day=cur||(out[todayIso()]=out[todayIso()]||{},todayIso());cur=day;
+      let v=toNum(m[2]);if(v==null)return;
+      if(key==="sleepHrs"){if(v>1440)v=v/3600;else if(v>24)v=v/60;v=+v.toFixed(2)}
+      if(key==="spo2"&&v<=1)v=v*100;
+      if(key==="distanceMi"){out[day].distanceKm=+(v*1.609).toFixed(2);return}
+      if(key==="weightLb"){out[day].weightKg=+(v*0.4536).toFixed(1);return}
+      if(["steps","standHrs","exerciseMin","restingHR","avgHR","maxHR","workoutMin","flights"].includes(key))v=Math.round(v);
+      else v=+v.toFixed(2);
+      out[day][key]=v;
+    });
+  });
+  Object.keys(out).forEach(d=>{if(!Object.keys(out[d]).length)delete out[d]});
+  return out;
+}
+
+/* ---------- Apple Health export.xml import (streamed in chunks) ---------- */
+const HK={
+  HKQuantityTypeIdentifierStepCount:["steps","sum"],
+  HKQuantityTypeIdentifierActiveEnergyBurned:["activeKcal","sum"],
+  HKQuantityTypeIdentifierAppleExerciseTime:["exerciseMin","sum"],
+  HKQuantityTypeIdentifierDistanceWalkingRunning:["distanceKm","sum"],
+  HKQuantityTypeIdentifierFlightsClimbed:["flights","sum"],
+  HKQuantityTypeIdentifierRestingHeartRate:["restingHR","avg"],
+  HKQuantityTypeIdentifierHeartRate:["avgHR","avg"],
+  HKQuantityTypeIdentifierHeartRateVariabilitySDNN:["hrv","avg"],
+  HKQuantityTypeIdentifierVO2Max:["vo2max","avg"],
+  HKQuantityTypeIdentifierOxygenSaturation:["spo2","avg"],
+  HKQuantityTypeIdentifierRespiratoryRate:["respRate","avg"],
+  HKQuantityTypeIdentifierBodyMass:["weightKg","last"],
+  HKCategoryTypeIdentifierAppleStandHour:["standHrs","stand"],
+  HKCategoryTypeIdentifierSleepAnalysis:["sleepHrs","sleep"]
+};
+const attr=(line,name)=>{const i=line.indexOf(" "+name+'="');if(i<0)return null;const s=i+name.length+3;return line.slice(s,line.indexOf('"',s))};
+function hkDate(s){return s?s.slice(0,10):null}
+function hkTime(s){if(!s)return NaN;return Date.parse(s.slice(0,10)+"T"+s.slice(11,19)+(s.slice(20,23)+":"+s.slice(23,25)))}
+async function importXml(file,days){
+  const since=addDays(todayIso(),-days);
+  const acc={};// date -> key -> source -> {sum,n,max,last}
+  const bump=(d,k,src,v,mode)=>{const a=((acc[d]=acc[d]||{})[k]=acc[d][k]||{})[src]=acc[d][k][src]||{sum:0,n:0,max:-Infinity,last:null,lt:0};a.sum+=v;a.n++;if(v>a.max)a.max=v;return a};
+  const wk={};
+  const CH=8*1024*1024;let pos=0,rest="";const prog=$("#importProg i");
+  const dec=new TextDecoder();
+  while(pos<file.size){
+    const buf=await file.slice(pos,pos+CH).arrayBuffer();pos+=CH;
+    const text=rest+dec.decode(buf,{stream:pos<file.size});
+    const lines=text.split("\n");rest=lines.pop();
+    for(const line of lines){
+      if(line.indexOf("<Record ")>=0){
+        const type=attr(line,"type"),map=HK[type];if(!map)continue;
+        const sd=attr(line,"startDate"),d=hkDate(type.includes("Sleep")?attr(line,"endDate"):sd);if(!d||d<since)continue;
+        const src=attr(line,"sourceName")||"?";const [k,mode]=map;
+        if(mode==="sleep"){const val=attr(line,"value")||"";if(!/Asleep/.test(val))continue;const h=(hkTime(attr(line,"endDate"))-hkTime(sd))/3600000;if(h>0&&h<24)bump(d,k,src,h,mode);continue}
+        if(mode==="stand"){if(/Stood/.test(attr(line,"value")||""))bump(d,k,src,1,mode);continue}
+        let v=parseFloat(attr(line,"value"));if(isNaN(v))continue;const unit=attr(line,"unit")||"";
+        if(k==="distanceKm"&&unit==="mi")v*=1.609;if(k==="distanceKm"&&unit==="m")v/=1000;
+        if(k==="activeKcal"&&unit==="kJ")v/=4.184;
+        if(k==="weightKg"&&unit==="lb")v*=0.4536;
+        if(k==="spo2"&&v<=1)v*=100;
+        const a=bump(d,k,src,v,mode);
+        if(mode==="last"){const t=hkTime(sd);if(t>=a.lt){a.lt=t;a.last=v}}
+        if(k==="avgHR"){const b=bump(d,"maxHR",src,v,"max")}
+      }else if(line.indexOf("<Workout ")>=0){
+        const sd=attr(line,"startDate"),d=hkDate(sd);if(!d||d<since)continue;
+        let dur=parseFloat(attr(line,"duration"));const u=attr(line,"durationUnit");if(u==="s")dur/=60;if(u==="hr"||u==="h")dur*=60;
+        const t=(attr(line,"workoutActivityType")||"").replace("HKWorkoutActivityType","").replace(/([a-z])([A-Z])/g,"$1 $2").replace("Traditional Strength Training","Strength").replace("Functional Strength Training","Strength").replace("High Intensity Interval Training","HIIT");
+        const w=wk[d]=wk[d]||{min:0,types:new Set()};if(!isNaN(dur))w.min+=dur;if(t)w.types.add(t);
+      }
+    }
+    prog.style.width=Math.min(100,pos/file.size*100).toFixed(1)+"%";
+    $("#importMsg").textContent=`Reading… ${fmt(Math.min(pos,file.size)/1048576)} of ${fmt(file.size/1048576)} MB`;
+    await new Promise(r=>setTimeout(r,0));
+  }
+  const out={};
+  Object.keys(acc).forEach(d=>{const o=out[d]={};
+    Object.entries(acc[d]).forEach(([k,bySrc])=>{const vs=Object.values(bySrc);let v;
+      if(k==="maxHR")v=Math.max(...vs.map(a=>a.max));
+      else if(k==="weightKg")v=vs.sort((a,b)=>b.lt-a.lt)[0].last;
+      else if(METRICS[k].kind==="sum"||k==="sleepHrs")v=Math.max(...vs.map(a=>a.sum));// largest single source avoids double counting watch + phone
+      else{const all=vs.reduce((s,a)=>[s[0]+a.sum,s[1]+a.n],[0,0]);v=all[0]/all[1]}
+      o[k]=["steps","standHrs","exerciseMin","flights","restingHR","avgHR","maxHR"].includes(k)?Math.round(v):+v.toFixed(k==="distanceKm"?2:1)})});
+  Object.entries(wk).forEach(([d,w])=>{const o=out[d]=out[d]||{};o.workoutMin=Math.round(w.min);o.workouts=[...w.types].join(", ")});
+  return out;
+}
+
+/* ---------- server API ---------- */
+async function api(path,opts={}){
+  const res=await fetch(path,{...opts,headers:{"content-type":"application/json",authorization:"Bearer "+state.token,...(opts.headers||{})}});
+  if(res.status===401){showLogin("That token didn't work. Try again.");throw new Error("unauthorized")}
+  const body=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(body.error||("Server error "+res.status));
+  return body;
+}
+async function saveDays(dayMap,{replace=false}={}){
+  if(!state.token){toast("Unlock the dashboard first");return false}
+  const entries=Object.entries(dayMap),CH=500;
+  try{
+    for(let i=0;i<entries.length;i+=CH){
+      await api("/api/days",{method:"POST",body:JSON.stringify({days:Object.fromEntries(entries.slice(i,i+CH)),replace})});
+      if(entries.length>CH){$("#importProg i").style.width=(Math.min(i+CH,entries.length)/entries.length*100)+"%";$("#importMsg").textContent=`Saving ${Math.min(i+CH,entries.length)} of ${entries.length} days…`}
+    }
+    await loadDays();return true;
+  }catch(e){if(e.message!=="unauthorized")toast("Couldn't save: "+e.message);return false}
+}
+async function loadDays(){
+  const {days}=await api("/api/days");state.real=days||{};
+  const last=Object.keys(state.real).sort().pop();
+  $("#lastSync").textContent=last?"Latest day: "+shortDate(last,true):"";
+  renderAll();
+}
+function showLogin(msg){$("#loginCard").hidden=false;$("#loginErr").hidden=!msg;$("#loginErr").textContent=msg||""}
+
+/* ---------- view plumbing ---------- */
+function prettyDate(d,short){const t=todayIso();if(d===t)return "Today";if(d===addDays(t,-1))return "Yesterday";return parseIso(d).toLocaleDateString(undefined,short?{weekday:"short",day:"numeric",month:"short"}:{weekday:"long",day:"numeric",month:"long"})}
+function shortDate(d,wd){return parseIso(d).toLocaleDateString(undefined,wd?{weekday:"short",day:"numeric",month:"short"}:{day:"numeric",month:"short"})}
+function renderAll(){
+  $("#demoBanner").hidden=!isDemo();
+  $("#dateLabel").textContent=prettyDate(state.sel);
+  $("#nextDay").disabled=state.sel>=todayIso();
+  if(state.tab==="today"){renderRings();renderReady();renderTiles();renderInsights();renderStreaks()}
+  if(state.tab==="trends"){renderChart();renderWow()}
+  if(state.tab==="log")renderLog();
+  if(state.tab==="sync")fillGoals();
+}
+function setTab(t){
+  state.tab=t;$$("nav.tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===t?"page":"false"));
+  ["today","trends","log","sync"].forEach(x=>$("#tab-"+x).hidden=x!==t);
+  $("#datenav").style.visibility=(t==="today"||t==="trends")?"visible":"hidden";
+  try{localStorage.setItem("dp_tab",t)}catch(e){}
+  renderAll();window.scrollTo({top:0});
+}
+function fillGoals(){const g=state.goals;$("#g_move").value=g.move;$("#g_exercise").value=g.exercise;$("#g_stand").value=g.stand;$("#g_steps").value=g.steps;$("#g_sleep").value=g.sleep}
+
+/* metric picker */
+$("#metricSel").innerHTML=Object.entries(METRICS).map(([k,m])=>`<option value="${k}">${m.name}</option>`).join("");
+$("#metricSel").addEventListener("change",e=>{state.metric=e.target.value;renderChart()});
+$$("#rangeSeg button").forEach(b=>b.addEventListener("click",()=>{state.range=+b.dataset.r;$$("#rangeSeg button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));renderChart()}));
+$$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+$$("[data-goto]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.goto)));
+$("#prevDay").addEventListener("click",()=>{state.sel=addDays(state.sel,-1);renderAll()});
+$("#nextDay").addEventListener("click",()=>{if(state.sel<todayIso()){state.sel=addDays(state.sel,1);renderAll()}});
+let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(state.tab==="trends")renderChart()},150)});
+
+/* log interactions */
+$("#logBody").addEventListener("click",e=>{const tr=e.target.closest("tr[data-d]");if(!tr)return;
+  if(isDemo()){toast("This is example data. Log a real day to start your own.");openEdit(todayIso());return}
+  openEdit(tr.dataset.d)});
+$("#newDay").addEventListener("click",()=>openEdit(todayIso()));
+$("#editClose").addEventListener("click",()=>{$("#editCard").hidden=true});
+$("#moreRows").addEventListener("click",()=>{state.logShown+=60;renderLog()});
+$("#editSave").addEventListener("click",async()=>{
+  const d=$("#f_date").value;if(!d){toast("Pick a date first");return}
+  const v={};FIELDS.forEach(k=>{const raw=$("#f_"+k).value.trim();if(raw==="")return;v[k]=(k==="workouts"||k==="note")?raw:Number(raw)});
+  const btn=$("#editSave");btn.disabled=true;
+  if(await saveDays({[d]:v},{replace:true})){toast("Saved "+shortDate(d,true));$("#editCard").hidden=true}
+  btn.disabled=false;
+});
+let delArmed=false;
+$("#editDelete").addEventListener("click",async e=>{
+  if(!delArmed){delArmed=true;e.target.textContent="Tap again to delete";setTimeout(()=>{delArmed=false;e.target.textContent="Delete day"},3000);return}
+  delArmed=false;e.target.textContent="Delete day";const d=$("#f_date").value;
+  if(await saveDays({[d]:null})){toast("Deleted "+shortDate(d,true));$("#editCard").hidden=true}
+});
+
+/* sync paste */
+function previewPaste(){
+  const p=parseSync($("#pasteBox").value);pendingPaste=p;const days=Object.keys(p).sort();
+  if(!$("#pasteBox").value.trim()){$("#pastePreview").textContent="";$("#pasteSave").disabled=true;return}
+  if(!days.length){$("#pastePreview").textContent="No numbers found. Check the text looks like steps=8432 kcal=512.";$("#pasteSave").disabled=true;return}
+  $("#pastePreview").innerHTML=days.map(d=>`<div><strong>${shortDate(d,true)}</strong>: ${Object.entries(p[d]).map(([k,v])=>`${esc(METRICS[k]?METRICS[k].name:k)} ${fmt(v,METRICS[k]?METRICS[k].dp:1)}`).join(" · ")}</div>`).join("");
+  $("#pasteSave").disabled=false;
+}
+$("#pasteBox").addEventListener("input",previewPaste);
+$("#pasteBox").addEventListener("paste",()=>setTimeout(previewPaste,0));
+$("#pasteClear").addEventListener("click",()=>{$("#pasteBox").value="";previewPaste()});
+$("#pasteSave").addEventListener("click",async()=>{
+  if(!pendingPaste)return;const days=Object.keys(pendingPaste);
+  if(await saveDays(pendingPaste)){toast(`Saved ${days.length} day${days.length>1?"s":""}`);$("#pasteBox").value="";previewPaste();state.sel=days.sort().pop();setTab("today")}
+});
+$("#syncUrl").textContent=location.origin+"/api/sync";
+$("#copyUrl").addEventListener("click",()=>{const t=$("#syncUrl").textContent;
+  try{navigator.clipboard.writeText(t).then(()=>toast("Copied"),()=>selectUrl())}catch(e){selectUrl()}});
+function selectUrl(){const r=document.createRange();r.selectNodeContents($("#syncUrl"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Selected. Copy it from the menu.")}
+
+/* import */
+$("#xmlFile").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  $("#importProg").hidden=false;$("#importSave").hidden=true;$("#importProg i").style.width="0";
+  try{
+    const out=await importXml(f,+$("#importRange").value);const n=Object.keys(out).length;pendingImport=out;
+    if(!n){$("#importMsg").textContent="No daily data found in that file. Make sure it's export.xml, not export_cda.xml.";return}
+    const ds=Object.keys(out).sort();
+    $("#importMsg").textContent=`Found ${n} days, ${shortDate(ds[0],false)} ${parseIso(ds[0]).getFullYear()} to ${shortDate(ds[ds.length-1],false)}. Tap Save to add them to your log.`;
+    $("#importSave").hidden=false;
+  }catch(err){$("#importMsg").textContent="Couldn't read that file. Choose export.xml from the unzipped folder."}
+  e.target.value="";
+});
+$("#importSave").addEventListener("click",async()=>{
+  if(!pendingImport)return;$("#importSave").disabled=true;
+  const n=Object.keys(pendingImport).length;
+  if(await saveDays(pendingImport)){$("#importMsg").textContent=`Imported ${n} days.`;$("#importSave").hidden=true;pendingImport=null;state.sel=todayIso();toast("Import complete")}
+  $("#importSave").disabled=false;
+});
+
+/* goals */
+$("#goalSave").addEventListener("click",async()=>{
+  const g={move:+$("#g_move").value||500,exercise:+$("#g_exercise").value||30,stand:+$("#g_stand").value||12,steps:+$("#g_steps").value||10000,sleep:+$("#g_sleep").value||8};
+  state.goals=g;
+  try{await api("/api/settings",{method:"PUT",body:JSON.stringify({goals:g})});toast("Goals saved");renderAll()}catch(e){if(e.message!=="unauthorized")toast("Couldn't save goals: "+e.message)}
+});
+
+/* boot */
+try{const t=localStorage.getItem("dp_tab");if(t&&["today","trends","log","sync"].includes(t))state.tab=t}catch(e){}
+const hash=(location.hash||"").slice(1);if(["today","trends","log","sync"].includes(hash))state.tab=hash;
+setTab(state.tab);
+
+async function start(){
+  try{
+    const {goals}=await api("/api/settings");state.goals={...DEFAULT_GOALS,...goals};
+    await loadDays();$("#loginCard").hidden=true;$("#offlineBanner").hidden=true;
+  }catch(e){if(e.message!=="unauthorized"){$("#offlineBanner").hidden=false;$("#offlineMsg").textContent="Can't reach your Daily Pulse server: "+e.message}}
+}
+$("#loginForm").addEventListener("submit",e=>{e.preventDefault();state.token=$("#tokenInput").value.trim();try{localStorage.setItem("dp_token",state.token)}catch(_){}start()});
+try{state.token=localStorage.getItem("dp_token")||""}catch(e){}
+if(state.token)start();else showLogin();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&state.token)loadDays().catch(()=>{})});
+})();
+</script>
+</body>
+</html>

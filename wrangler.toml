@@ -1,0 +1,17 @@
+name = "daily-pulse"
+main = "src/worker.js"
+compatibility_date = "2025-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+# Your local time zone, used when the Shortcut sends no date. List: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+TIMEZONE = "Asia/Kolkata"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "daily-pulse"
+# Paste the id printed by `npx wrangler d1 create daily-pulse` here.
+database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
