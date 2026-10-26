@@ -14,4 +14,4 @@ TIMEZONE = "Asia/Kolkata"
 binding = "DB"
 database_name = "daily-pulse"
 # Paste the id printed by `npx wrangler d1 create daily-pulse` here.
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "2af4792d-5068-43e1-912c-fa1a84516f54"
